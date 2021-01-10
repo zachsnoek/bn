@@ -9,10 +9,11 @@ const {
 const log = (text) => logger("add", text);
 
 const add = async () => {
-    // TODO: Check for books.json and books directory. This command should only run at the top-level of a bn project
+    // TODO: Check for bn.json and books directory. This command should only run at the top-level of a bn project
 
-    // Get existing books.json metadata
-    const currentMetadata = JSON.parse(fs.readFileSync("./books.json"));
+    // Get existing bn.json metadata
+    const currentMetadata = JSON.parse(fs.readFileSync("./bn.json"));
+    const currentBooks = currentMetadata.books;
 
     // Get new book metadata
     const title = await askQuestion("Book title: ");
@@ -21,14 +22,15 @@ const add = async () => {
     const storeKindleNotes = await askQuestion(
         "Store Kindle notes for this book? (Y/N): "
     );
-    const isKindleBook = getBooleanFromAnswer(storeKindleNotes);
+    const isKindleBook = getBooleanFromAnswer(storeKindleNotes) || undefined;
 
-    // Add a new entry to books.json and sort
+    // Add a new entry to bn.json and sort
     const newBookMetadata = { [title]: { author, slug, isKindleBook } };
-    const newMetadata = sortObject({ ...currentMetadata, ...newBookMetadata });
+    const newBooks = sortObject({ ...currentBooks, ...newBookMetadata });
+    const newMetadata = { ...currentMetadata, books: newBooks };
 
-    fs.writeFileSync("./books.json", JSON.stringify(newMetadata, null, "\t"));
-    log(`Successfully added entry for "${title}" in books.json`);
+    fs.writeFileSync("./bn.json", JSON.stringify(newMetadata, null, "\t"));
+    log(`Successfully added entry for "${title}" in bn.json`);
 
     const newBookDir = `./books/${slug}`;
 
@@ -45,16 +47,16 @@ By ${author}
 
 <hr>
 
-### [Personal notes](./notes.md)
+### [Personal Notes](./notes.md)
 `;
 
     fs.writeFileSync(`${newBookDir}/README.md`, readmeText);
     log("Successfully created new README.md file");
 
     // Create books/slug/notes.md and books/slug/kindle.md
-    const personalNotesText = `# ${title}
+    const personalNotesText = `# Personal Notes
 
-By ${author}
+"${title}" by ${author}
 
 [Go back](./README.md)
 
@@ -67,9 +69,9 @@ _No notes yet. Simply edit this file to start taking notes!_
     log("Successfully created new notes.md file");
 
     if (isKindleBook) {
-        const kindleNotesText = `# ${title}
+        const kindleNotesText = `# Kindle Notes
 
-By ${author}
+"${title}" by ${author}
 
 [Go back](./README.md)
 
@@ -78,14 +80,14 @@ By ${author}
         fs.writeFileSync(`${newBookDir}/kindle.md`, kindleNotesText);
         fs.appendFileSync(
             `${newBookDir}/README.md`,
-            "### [Kindle notes](./kindle.md)"
+            "### [Kindle Notes](./kindle.md)"
         );
         log("Successfully created new kindle.md file");
     }
 
     const topLevelReadme = fs.readFileSync("./README.md").toString();
     const oldReadmeHeader = topLevelReadme.split("## Books")[0];
-    const newReadmeBookList = createReadmeBookList(newMetadata);
+    const newReadmeBookList = createMarkdownBookList(newBooks);
 
     const newReadme = [oldReadmeHeader, newReadmeBookList].join("");
     fs.writeFileSync("./README.md", newReadme);
@@ -97,7 +99,7 @@ By ${author}
     );
 };
 
-const createReadmeBookList = (deserializedBooks) => {
+const createMarkdownBookList = (deserializedBooks) => {
     const bookListText = ["## Books\n\n"];
 
     Object.keys(deserializedBooks).forEach((title) => {
@@ -105,10 +107,10 @@ const createReadmeBookList = (deserializedBooks) => {
         const bookDir = `./books/${slug}`;
 
         bookListText.push(`- [${title} by ${author}](${bookDir}/README.md)\n`);
-        bookListText.push(`\t- [Personal notes](${bookDir}/notes.md)\n`);
+        bookListText.push(`\t- [Personal Notes](${bookDir}/notes.md)\n`);
 
         if (isKindleBook) {
-            bookListText.push(`\t- [Kindle notes](${bookDir}/kindle.md)\n`);
+            bookListText.push(`\t- [Kindle Notes](${bookDir}/kindle.md)\n`);
         }
     });
 
