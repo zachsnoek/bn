@@ -46,4 +46,6 @@ const getBooleanFromAnswer = (answer) => {
     });
 };
 
-module.exports = { askQuestion, sortObject, getBooleanFromAnswer };
+const logger = (cmdName, text) => console.log(`bn ${cmdName}: ${text}`);
+
+module.exports = { askQuestion, sortObject, getBooleanFromAnswer, logger };

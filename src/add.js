@@ -1,5 +1,12 @@
 const fs = require("fs");
-const { askQuestion, getBooleanFromAnswer, sortObject } = require("./utils");
+const {
+    askQuestion,
+    getBooleanFromAnswer,
+    sortObject,
+    logger,
+} = require("./utils");
+
+const log = (text) => logger("add", text);
 
 const add = async () => {
     // TODO: Check for books.json and books directory. This command should only run at the top-level of a bn project
@@ -21,15 +28,13 @@ const add = async () => {
     const newMetadata = sortObject({ ...currentMetadata, ...newBookMetadata });
 
     fs.writeFileSync("./books.json", JSON.stringify(newMetadata, null, "\t"));
-    console.log(
-        `bn add: Successfully added entry for "${title}" in books.json`
-    );
+    log(`Successfully added entry for "${title}" in books.json`);
 
     const newBookDir = `./books/${slug}`;
 
     // Create new directory for book slug
     fs.mkdirSync(newBookDir);
-    console.log(`bn add: Successfully created new directory to store notes`);
+    log("Successfully created new directory to store notes");
 
     // Create README.md in books/slug
     const readmeText = `# ${title}
@@ -44,7 +49,7 @@ By ${author}
 `;
 
     fs.writeFileSync(`${newBookDir}/README.md`, readmeText);
-    console.log("bn add: Successfully created new README.md file");
+    log("Successfully created new README.md file");
 
     // Create books/slug/notes.md and books/slug/kindle.md
     const personalNotesText = `# ${title}
@@ -59,7 +64,7 @@ _No notes yet. Simply edit this file to start taking notes!_
 `;
 
     fs.writeFileSync(`${newBookDir}/notes.md`, personalNotesText);
-    console.log("bn add: Successfully created new notes.md file");
+    log("Successfully created new notes.md file");
 
     if (isKindleBook) {
         const kindleNotesText = `# ${title}
@@ -75,7 +80,7 @@ By ${author}
             `${newBookDir}/README.md`,
             "### [Kindle notes](./kindle.md)"
         );
-        console.log("bn add: Successfully created new kindle.md file");
+        log("Successfully created new kindle.md file");
     }
 
     const topLevelReadme = fs.readFileSync("./README.md").toString();
@@ -85,9 +90,7 @@ By ${author}
     const newReadme = [oldReadmeHeader, newReadmeBookList].join("");
     fs.writeFileSync("./README.md", newReadme);
 
-    console.log(
-        `bn add: Successfully added notes links to top-level README.md`
-    );
+    log("Successfully added notes links to top-level README.md");
 
     console.log(
         `\nA new notes entry for "${title}" has been created. Start taking notes by editing ${newBookDir}/notes.md.`
