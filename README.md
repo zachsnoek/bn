@@ -28,7 +28,7 @@ $ bn init
 3. Add a book to start taking notes for
 
 ```bash
-$ bn new
+$ bn add
 ```
 
 Once you answer the prompts, there should be a `notes.md` file for the book that can be used to store notes in.
